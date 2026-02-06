@@ -1,0 +1,33 @@
+# Render Blueprint for Kisaan Vikas
+# Deploy backend and ML service together
+
+services:
+  # Node.js Backend API
+  - type: web
+    name: kisaanvikas-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false  # Set manually in Render dashboard
+      - key: MONGODB_URI
+        sync: false  # Set manually in Render dashboard
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: kisaanvikas-ml
+          property: host
+
+  # Python ML Service
+  - type: web
+    name: kisaanvikas-ml
+    runtime: python
+    rootDir: server/ml
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn ml_service:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
